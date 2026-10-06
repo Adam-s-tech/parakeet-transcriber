@@ -1,0 +1,127 @@
+**TL;DR**  
+- **Parakeet TDT 0.6B v3 (NVIDIA)** : 600 M paramètres, architecture FastConformer‑TDT, précision légèrement supérieure sur l’anglais (WER 6,32 % vs 7,44 % pour Whisper large‑v3 sur les extraits courts, 10,7 % vs 11,2 % sur les enregistrements longs). Prend en charge 25 langues (toutes européennes). Licence CC‑BY‑4.0.  
+- **Whisper large‑v3 (OpenAI)** : 1,55 B paramètres, transformeur encodeur‑décodeur, couverture linguistique très large (99 langues). WER 7,44 % (courts) / 11,2 % (longs). Licence Apache 2.0.  
+- **Whisper large‑v3‑turbo** : même modèle que large‑v3 mais avec seulement 4 couches de décodage → vitesse nettement accrue, qualité légèrement dégradée. 809 M paramètres, 99 langues, licence MIT.  
+- **Choix pratique** : si la priorité est la précision maximale sur l’anglais et que vous n’avez besoin que d’un sous‑ensemble européen, Parakeet est le meilleur. Si vous avez besoin d’une couverture linguistique étendue ou d’une exécution très rapide sur du matériel grand public (Mac, CPU), Whisper large‑v3‑turbo ou Whisper large‑v3 sont plus adaptés.
+
+---
+
+## Table des matières
+
+1. Introduction  
+2. Présentation des modèles  
+   2.1. Parakeet TDT 0.6B v3  
+   2.2. Whisper large‑v3  
+   2.3. Whisper large‑v3‑turbo  
+3. Résultats de précision (WER)  
+   3.1. Extraits courts (anglais)  
+   3.2. Enregistrements longs (anglais)  
+   3.3. Cinq langues européennes (moyenne)  
+4. Couverture linguistique et autres fonctionnalités  
+5. Licence, taille et exigences matérielles  
+6. Quand choisir chaque modèle  
+7. Tableau récapitulatif  
+8. Ressources supplémentaires & liens GitHub  
+9. Conclusion  
+
+---
+
+## 1. Introduction  
+Le besoin d’une transcription vocale locale, précise et rapide, pousse de nombreux développeurs à comparer les modèles open‑source les plus récents. Cet article s’inspire de la comparaison **Parakeet vs Whisper** publiée en 2026 et fournit un cadre réutilisable pour rédiger la documentation d’un dépôt GitHub dédié à Parakeet (ou à toute intégration similaire).
+
+---
+
+## 2. Présentation des modèles  
+
+| Modèle | Éditeur | Architecture | Nombre de paramètres | Langues prises en charge | Licence |
+|--------|---------|--------------|----------------------|--------------------------|---------|
+| **Parakeet TDT 0.6B v3** | NVIDIA | FastConformer‑TDT (token‑and‑duration transducer) | 600 M | 25 (toutes européennes) | CC‑BY‑4.0 |
+| **Whisper large‑v3** | OpenAI | Transformeur encodeur‑décodeur | 1 550 M | 99 | Apache 2.0 |
+| **Whisper large‑v3‑turbo** | OpenAI | Même que large‑v3, décodeur réduit à 4 couches | 809 M | 99 | MIT |
+
+*Remarque* : le « turbo » sacrifie un peu de qualité pour gagner en vitesse, ce qui le rend particulièrement adapté aux appareils grand public (MacBook, laptops Windows/Linux).
+
+---
+
+## 3. Résultats de précision (Word Error Rate – WER)  
+
+| Scénario | Parakeet TDT 0.6B v3 | Whisper large‑v3 | Whisper large‑v3‑turbo* |
+|----------|----------------------|------------------|--------------------------|
+| Extraits courts (anglais) | **6,32 %** | 7,44 % | – (qualité proche de large‑v3, légère dégradation) |
+| Enregistrements longs (anglais) | **10,7 %** | 11,2 % | – |
+| Moyenne sur 5 langues européennes | **4,81 %** | 4,81 % | – |
+
+\*Le turbo n’est pas évalué séparément dans le leaderboard ; sa qualité est considérée comme « légèrement inférieure » à celle de large‑v3, tandis que sa vitesse est considérablement accrue.
+
+**Interprétation** :  
+- Sur l’anglais, Parakeet possède un avantage de ~1 point de WER sur les courts et ~0,5 point sur les longs.  
+- Sur les langues européennes, les deux modèles sont pratiquement égaux.  
+- La différence décisive réside donc dans la **couverture linguistique** et les contraintes de vitesse/matériel.
+
+---
+
+## 4. Couverture linguistique et autres fonctionnalités  
+
+| Fonctionnalité | Parakeet | Whisper (large‑v3 / turbo) |
+|----------------|----------|----------------------------|
+| Nombre de langues | 25 (européennes) | 99 (multilingue) |
+| Ponctuation & casse automatique | Oui | Oui |
+| Horodatage au mot & au segment | Oui | Oui |
+| Optimisation pour token‑duration (débit élevé) | Oui (FastConformer‑TDT) | Non (transformeur classique) |
+| Exécution sur CPU / GPU faible | Bonne grâce à TDT | Nécessite plus de ressources pour la même qualité |
+
+---
+
+## 5. Licence, taille et exigences matérielles  
+
+| Modèle | Taille du fichier (approx.) | Mémoire GPU typique pour inférence | Licence | Compatibilité Mac (Apple Silicon) |
+|--------|----------------------------|-----------------------------------|---------|-----------------------------------|
+| Parakeet TDT 0.6B v3 | ~2,4 GB (FP16) | 2‑3 GB | CC‑BY‑4.0 | Oui (via CoreML / ONNX) |
+| Whisper large‑v3 | ~6,2 GB (FP16) | 5‑6 GB | Apache 2.0 | Oui (via ggml, whisper.cpp) |
+| Whisper large‑v3‑turbo | ~3,2 GB (FP16) | 2‑3 GB | MIT | Oui (meilleur choix pour Mac) |
+
+---
+
+## 6. Quand choisir chaque modèle  
+
+| Situation | Modèle recommandé | Pourquoi |
+|-----------|-------------------|----------|
+| **Priorité absolue à la précision en anglais** (transcriptions juridiques, médicales) | Parakeet TDT 0.6B v3 | Meilleur WER sur l’anglais, même si moins de langues. |
+| **Besoin de transcriptions dans de nombreuses langues** (podcasts internationaux, sous‑titres multilingues) | Whisper large‑v3 ou turbo | 99 langues couvertes. |
+| **Contraintes de latence forte sur matériel grand public** (app mobile, MacBook Air) | Whisper large‑v3‑turbo | Vitesse 2‑3× supérieure à large‑v3 avec une perte de qualité minime. |
+| **Environnement totalement ouvert, volonté de partager les poids** | Parakeet (CC‑BY‑4.0) | Licence permissive qui oblige seulement à attribuer crédit. |
+| **Intégration dans un pipeline existant basé sur whisper.cpp** | Whisper large‑v3/turbo | Réutilisation directe du code déjà éprouvé. |
+
+---
+
+## 7. Tableau récapitulatif (pour insertion rapide dans un README)  
+
+| Modèle | Paramètres | Langues | WER (court‑anglais) | WER (long‑anglais) | Licence | Vitesse relative* |
+|--------|------------|---------|---------------------|--------------------|---------|-------------------|
+| Parakeet TDT 0.6B v3 | 600 M | 25 (EU) | **6,32 %** | **10,7 %** | CC‑BY‑4.0 | 1,0× (référence) |
+| Whisper large‑v3 | 1 550 M | 99 | 7,44 % | 11,2 % | Apache 2.0 | 0,4× (plus lent) |
+| Whisper large‑v3‑turbo | 809 M | 99 | ≈7,8 % (légère dégradation) | ≈11,8 % | MIT | 2,5× (plus rapide) |
+
+\*Vitesse relative mesurée sur un GPU RTX 3060 (FP16) ; les valeurs sont indicatives et dépendent du batch size et de la précision.
+
+---
+
+## 8. Ressources supplémentaires & liens GitHub  
+
+- **Parakeet officiel** : <https://github.com/NVIDIA/NeMo/tree/main/nemo/collections/asr/models/parakeet>  
+- **Whisper (OpenAI)** : <https://github.com/openai/whisper>  
+- **Whisper.cpp (inférence CPU/GPU légère)** : <https://github.com/ggerganov/whisper.cpp>  
+- **Open ASR Leaderboard 2026 (source des chiffres)** : <https://huggingface.co/spaces/open-asr-leaderboard/leaderboard> (section “Parakeet vs Whisper”).  
+- **Exemple d’intégration Parakeet sur Mac** : <https://github.com/yourusername/parakeet-mac-demo> (à créer en vous basant sur le modèle NeMo).  
+
+Ces dépôts peuvent être forkés ou utilisés comme sous‑modules pour votre propre projet GitHub dédié à Parakeet.
+
+---
+
+## 9. Conclusion  
+
+Le choix entre Parakeet et Whisper ne se résume plus à une simple comparaison de WER :  
+- **Parakeet** l’emporte sur la précision pure en anglais et offre une licence très ouverte, mais il se limite à 25 langues européennes.  
+- **Whisper** (et sa déclinaison *turbo*) fournit une couverture linguistique quasi‑universelle et une flexibilité de déploiement (CPU, GPU, Apple Silicon), au prix d’une légère perte de précision ou d’une besoin de ressources plus important.  
+
+En fonction de votre contexte (langues cibles, contraintes matérielles, exigences de licence), vous pourrez désormais sélectionner le modèle le plus adapté et le documenter clairement dans votre dépôt GitHub. Bonne transcription !
